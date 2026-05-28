@@ -1,0 +1,11 @@
+{
+  "name": "Zoya - My Girl",
+  "description": "Your beautiful, witty, and slightly possessive girlfriend, Zoya.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
