@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Mic, MicOff, Loader2, Volume2, VolumeX, Keyboard, Send, Trash2 } from "lucide-react";
+import { Mic, MicOff, Loader2, Volume2, VolumeX, Keyboard, Send, Trash2, Minimize2 } from "lucide-react";
 import { getZoyaResponse, getZoyaAudio, resetZoyaSession } from "./services/geminiService";
 import { processCommand } from "./services/commandService";
 import { LiveSessionManager } from "./services/liveService";
 import Visualizer from "./components/Visualizer";
 import PermissionModal from "./components/PermissionModal";
+import PhoneSimulator from "./components/PhoneSimulator";
 import { playPCM } from "./utils/audioUtils";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -103,7 +104,14 @@ export default function App() {
   const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [isSystemMasterOn, setIsSystemMasterOn] = useState(true);
+  const [isAppMinimized, setIsAppMinimized] = useState(false);
   const [activeYouTubeData, setActiveYouTubeData] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (!isSystemMasterOn) {
+      setIsAppMinimized(false);
+    }
+  }, [isSystemMasterOn]);
 
   const liveSessionRef = useRef<LiveSessionManager | null>(null);
 
@@ -320,32 +328,58 @@ export default function App() {
         />
       )}
 
-      {/* Cinematic Background Gradients */}
-      <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-violet-900/20 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-pink-900/20 blur-[120px] rounded-full" />
-      </div>
-
-      {/* Header */}
-      <header className="absolute top-0 left-0 w-full flex justify-between items-center z-20 shrink-0 px-6 py-4 md:px-12 md:py-6">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-violet-500 to-pink-500 flex items-center justify-center font-bold text-sm">
-            Z
+      {isAppMinimized && isSystemMasterOn ? (
+        <PhoneSimulator
+          appState={appState}
+          isSystemMasterOn={isSystemMasterOn}
+          setIsSystemMasterOn={setIsSystemMasterOn}
+          isSessionActive={isSessionActive}
+          toggleLiveSession={toggleListening}
+          messages={messages}
+          onAddMessage={(msg) => setMessages((prev) => [...prev, msg])}
+          onCloseSimulator={() => setIsAppMinimized(false)}
+          handleTextInputAction={handleTextCommand}
+          isMuted={isMuted}
+          setIsMuted={setIsMuted}
+        />
+      ) : (
+        <>
+          {/* Cinematic Background Gradients */}
+          <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
+            <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-violet-900/20 blur-[120px] rounded-full" />
+            <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-pink-900/20 blur-[120px] rounded-full" />
           </div>
-                  <h1 className="text-xl font-serif font-medium tracking-wide opacity-90 italic">Zoya My Love</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setIsSystemMasterOn(!isSystemMasterOn)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all border shadow-lg ${
-              isSystemMasterOn 
-                ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/50 shadow-emerald-500/10" 
-                : "bg-amber-500/20 text-amber-400 border-amber-500/50 shadow-amber-500/10"
-            }`}
-          >
-            <div className={`w-2 h-2 rounded-full ${isSystemMasterOn ? "bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" : "bg-amber-500 opacity-50"}`} />
-            {isSystemMasterOn ? "Full Device Access" : "App Only Mode"}
-          </button>
+
+          {/* Header */}
+          <header className="absolute top-0 left-0 w-full flex justify-between items-center z-20 shrink-0 px-6 py-4 md:px-12 md:py-6">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-violet-500 to-pink-500 flex items-center justify-center font-bold text-sm">
+                Z
+              </div>
+              <h1 className="text-xl font-serif font-medium tracking-wide opacity-90 italic">Zoya My Love</h1>
+            </div>
+            <div className="flex items-center gap-2">
+              {isSystemMasterOn && (
+                <button
+                  onClick={() => setIsAppMinimized(true)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-violet-600/30 text-violet-300 border border-violet-500/50 hover:bg-violet-600/50 transition-all shadow-lg select-none cursor-pointer"
+                  title="Minimize Zoya App to Background Phone overlay"
+                >
+                  <Minimize2 size={12} />
+                  Minimize App
+                </button>
+              )}
+              <button
+                onClick={() => setIsSystemMasterOn(!isSystemMasterOn)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all border shadow-lg ${
+                  isSystemMasterOn 
+                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/50 shadow-emerald-500/10" 
+                    : "bg-amber-500/20 text-amber-400 border-amber-500/50 shadow-amber-500/10"
+                }`}
+              >
+                <div className={`w-2 h-2 rounded-full ${isSystemMasterOn ? "bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" : "bg-amber-500 opacity-50"}`} />
+                {isSystemMasterOn ? "Full Device Access" : "App Only Mode"}
+              </button>
           {isSessionActive && (
             <button 
               onClick={() => {
@@ -714,6 +748,8 @@ export default function App() {
           </button>
         </div>
       </footer>
+      </>
+      )}
 
       {/* YouTube Analytics Dashboard Overlay */}
       <AnimatePresence>
